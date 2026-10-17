@@ -10,6 +10,7 @@
 import { NAMES, STATE_TEXT, STATUS_NAMES } from './i18n.js';
 import {
   hoursUntil,
+  isDated,
   isOnDay,
   lastLaunch,
   nextLaunch,
@@ -120,7 +121,9 @@ export function buildStates(gladys, config, launches, { now, timeZone }) {
       'launches_7_days',
       Math.min(
         100,
-        upcomingOf(launches, scope, now).filter((launch) => launch.net < now + WEEK).length,
+        upcomingOf(launches, scope, now).filter(
+          (launch) => isDated(launch) && launch.net < now + WEEK,
+        ).length,
       ),
     );
     number('webcast_live', Number(Boolean(next?.webcastLive)));

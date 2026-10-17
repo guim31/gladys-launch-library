@@ -7,7 +7,7 @@
 
 import { deviceIds } from './device.js';
 import { SENTENCES, STATUS_NAMES } from './i18n.js';
-import { hoursUntil, scopes, shortName, upcomingOf } from './launches.js';
+import { hoursUntil, nextLaunch, scopes, shortName, upcomingOf } from './launches.js';
 import { formatNet } from './time.js';
 
 export const DEFAULT_COUNT = 3;
@@ -49,8 +49,10 @@ export function upcomingSummary(service, scope, count, language = service.config
 export const SCENE_ACTIONS = {
   read_next_launch: async (service, { fields = {} }) => {
     const language = service.config.language;
-    const summary = upcomingSummary(service, scopeOf(service, fields.device), 1);
-    const [launch] = summary.list;
+    const scope = scopeOf(service, fields.device);
+    const summary = upcomingSummary(service, scope, 1);
+    const launches = service.launches();
+    const launch = launches && nextLaunch(launches, scope, service.now());
     if (!launch) {
       return {
         sentence: summary.sentence,

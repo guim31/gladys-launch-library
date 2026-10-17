@@ -257,8 +257,11 @@ N seconds."}`, lu par `retryDelay`. Le client s'arrête de lui-même à 12 requ�
   « dernier lancement » des filtres.
 - Statuts (id → clé figée) : 1 go, 2 tbd, 3 success, 4 failure, 5 hold, 6 in_flight, 7 partial_failure,
   8 tbc, 9 deployed. Précision de `net` par `net_precision.abbrev` : SEC, MIN, HR, DAY, AM, PM, W, M,
-  Q1…Q4, H1, H2, Y… Une date « M » est le 1er du mois à 00:00 UTC (« pas avant le ») : mois et
-  trimestres sont formatés en UTC.
+  Q1…Q4, H1, H2, Y… Les dates DAY, M, Q… sont à 00:00 UTC (relevé le 17/10/2026 : une date « M » tombe le **dernier**
+  jour du mois, une « Q4 » le 31/12) : jour, mois et trimestre sont formatés en UTC, sinon la veille
+  s'affiche à l'ouest de Greenwich. Le « prochain lancement » est le premier dont le jour est connu, et
+  « Lancements sous 7 jours » ne compte que ceux-là. Un « report » ne compte qu'entre deux dates
+  horaires : une date au jour qui reçoit son heure est une précision gagnée, pas un report.
 - Déclencheurs : un événement **par appareil** dont la portée contient le lancement (tous + filtres),
   avec un champ `device` **obligatoire** (`source: devices`) : un joker ferait tourner une scène deux fois.
   « Lancement imminent » seulement pour une précision SEC/MIN et un statut go/tbc. Les transitions

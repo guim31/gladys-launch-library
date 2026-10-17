@@ -100,8 +100,15 @@ export function upcomingOf(launches, scope, now) {
   );
 }
 
+/**
+ * The next launch: the first one whose day is known. Month and quarter
+ * estimates are dated at the end of their period and would come first with
+ * a misleading countdown; one of them is the next launch only when nothing
+ * else is planned.
+ */
 export function nextLaunch(launches, scope, now) {
-  return upcomingOf(launches, scope, now)[0] ?? null;
+  const upcoming = upcomingOf(launches, scope, now);
+  return upcoming.find(isDated) ?? upcoming[0] ?? null;
 }
 
 /** The most recent launch that left the ground, in a scope. */
@@ -117,7 +124,16 @@ export function lastLaunch(launches, scope) {
 
 /** Is the launch on this local calendar day (only when its day is known)? */
 export function isOnDay(launch, today, localDate, timeZone) {
-  return DAILY.has(launch.precision) && localDate(launch.net, timeZone) === today;
+  if (!DAILY.has(launch.precision)) {
+    return false;
+  }
+  // A day-only date is a UTC calendar day (00:00 UTC), a timed one a local instant.
+  return localDate(launch.net, TIMED.has(launch.precision) ? timeZone : 'UTC') === today;
+}
+
+/** Is the day of the launch known (not a month, quarter or year estimate)? */
+export function isDated(launch) {
+  return DAILY.has(launch.precision);
 }
 
 /** Whole hours before the date (No Earlier Than), 0 once it is reached. */

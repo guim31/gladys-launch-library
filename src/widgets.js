@@ -9,7 +9,7 @@
 import { WIDGET_COLORS } from '@gladysassistant/integration-sdk';
 import { LANGUAGES } from './config.js';
 import { STATUS_NAMES, WIDGET_TEXT } from './i18n.js';
-import { shortName, upcomingOf } from './launches.js';
+import { isDated, shortName, upcomingOf } from './launches.js';
 import { scopeOf } from './scenes.js';
 import { WIDGET_KEY } from './service.js';
 import { formatNet } from './time.js';
@@ -75,7 +75,7 @@ export function buildContent(service, { settings = {}, language } = {}) {
     components.push({ type: 'text', variant: 'body', text: text.none });
     return { ttl_seconds: 900, components };
   }
-  const [next] = upcoming;
+  const next = upcoming.find(isDated) ?? upcoming[0];
   components.push({
     type: 'value',
     label: text.nextIn,
@@ -86,7 +86,7 @@ export function buildContent(service, { settings = {}, language } = {}) {
   components.push({
     type: 'value',
     label: text.within7,
-    value: upcoming.filter((launch) => launch.net < now + WEEK).length,
+    value: upcoming.filter((launch) => isDated(launch) && launch.net < now + WEEK).length,
     icon: 'calendar',
   });
   components.push({

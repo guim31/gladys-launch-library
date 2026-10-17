@@ -210,3 +210,84 @@ test('"Check" never exceeds the hourly margin', async (t) => {
   assert.match(ack.data.message.en, /Requests left this hour: 0 of 12\./);
   assert.equal(world.gladys.fake.connectionStatus.connected, true, 'our own margin is no problem');
 });
+
+// Regressions found in review.
+
+test('a day-only date that gets its time is not a postponement', async (t) => {
+  const world = await createWorld({ at: '2026-10-28T12:00:00Z' });
+  t.after(() => world.app.stop());
+  const vulcan = world.api.launch('Vulcan VC6L');
+  vulcan.net_precision = { id: 1, abbrev: 'MIN', name: 'Minute' };
+  edit(world.api, 'Vulcan VC6L', { net: '2026-10-29T14:30:00Z' });
+  // An hour-precise date refined by 20 minutes is no postponement either.
+  edit(world.api, 'Ceres-1S', { net: '2026-10-21T03:55:00Z' });
+  await world.runUntil('2026-10-28T12:31:00Z');
+  assert.deepEqual(events(world, 'launch_postponed'), []);
+});
+
+test('a date that slips by seconds never fires the same alert twice', async (t) => {
+  const world = await createWorld({ at: '2026-10-19T19:30:00Z' });
+  t.after(() => world.app.stop());
+  await world.runUntil('2026-10-19T19:37:00Z');
+  edit(world.api, MMX, { net: '2026-10-19T19:41:50Z' });
+  await world.service.check();
+  await world.runUntil('2026-10-19T19:40:00Z');
+  const soon = events(world, 'launch_soon').filter((event) =>
+    event.data.launch_name.startsWith(MMX),
+  );
+  assert.deepEqual(
+    soon.map((event) => event.data.minutes_before),
+    [5],
+  );
+});
+
+test('a refused alert is sent again to the devices that missed it only', async (t) => {
+  const world = await createWorld({ at: '2026-10-19T10:20:00Z', config: { filters: 'SpaceX' } });
+  t.after(() => world.app.stop());
+  const publish = world.gladys.publishSceneEvent.bind(world.gladys);
+  let refused = 0;
+  t.mock.method(world.gladys, 'publishSceneEvent', async (key, data) => {
+    if (data.device.endsWith('filter-spacex') && refused === 0) {
+      refused += 1;
+      throw new Error('Gladys is restarting');
+    }
+    return publish(key, data);
+  });
+  await world.runUntil('2026-10-19T10:27:00Z');
+  const five = events(world, 'launch_soon').filter(
+    (event) => event.data.launch_name.startsWith(BANDWAGON) && event.data.minutes_before === 5,
+  );
+  assert.deepEqual(five.map((event) => event.data.device.split(':').at(-1)).sort(), [
+    'filter-spacex',
+    'next',
+  ]);
+});
+
+test('a scrub recorded an hour after T-0 is still a postponement', async (t) => {
+  const world = await createWorld({ at: '2026-10-19T10:00:00Z' });
+  t.after(() => world.app.stop());
+  await world.runUntil('2026-10-19T11:20:00Z');
+  edit(world.api, BANDWAGON, { net: '2026-10-20T10:30:00Z' });
+  await world.runUntil('2026-10-19T11:51:00Z');
+  assert.deepEqual(
+    events(world, 'launch_postponed').map((event) => event.data.reason),
+    ['delayed'],
+  );
+});
+
+test('month and quarter estimates are not counted within 7 days, nor taken as next', async (t) => {
+  const world = await createWorld({ at: '2026-10-25T12:00:00Z', config: { language: 'en' } });
+  t.after(() => world.app.stop());
+  // "NET October" launches are dated 31 Oct 00:00 UTC in the recorded answer.
+  assert.equal(world.state('launches_7_days'), 1);
+  assert.match(world.state('next_name'), /^Vulcan VC6L/);
+  assert.equal(world.state('next_date'), 'Thu, Oct 29');
+});
+
+test('a day-only launch is shown on its UTC day west of Greenwich', async (t) => {
+  const world = await createWorld({ at: '2026-10-29T03:00:00Z', timeZone: 'America/Cayenne' });
+  t.after(() => world.app.stop());
+  assert.match(world.state('next_name'), /^Vulcan VC6L/);
+  assert.equal(world.state('next_date'), 'jeu. 29 oct.');
+  assert.equal(world.state('launch_today'), 1);
+});

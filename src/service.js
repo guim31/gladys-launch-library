@@ -96,6 +96,8 @@ export class LaunchService {
     this.rateLimited = false;
     this.retryAt = 0;
     this.known = null;
+    // "Launch soon" already fired: `${id}|${lead}|${scope}` → the date it was for.
+    this.fired = {};
     this.lastCheck = 0;
     this.lastForce = 0;
     // undefined: nothing reported yet (null is "no problem").
@@ -122,6 +124,7 @@ export class LaunchService {
       const now = this.now();
       // A fresh install fires nothing for what happened before it.
       this.known = saved?.known ?? null;
+      this.fired = saved?.fired ?? {};
       this.lastCheck = saved ? Math.max(saved.lastCheck ?? 0, now - CATCH_UP) : now;
       if (this.known === null && this.launches()) {
         this.remember(this.launches(), now);
@@ -322,7 +325,7 @@ export class LaunchService {
   remember(launches, now) {
     const known = {};
     for (const launch of launches) {
-      known[launch.id] = { status: launch.status, net: launch.net };
+      known[launch.id] = { status: launch.status, net: launch.net, precision: launch.precision };
     }
     // A launch that left both lists is kept a few days (it may come back).
     for (const [id, entry] of Object.entries(this.known ?? {})) {
@@ -367,8 +370,8 @@ export class LaunchService {
       if (launch.status === 'hold' && before.status !== 'hold') {
         events.push([TRIGGERS.LAUNCH_POSTPONED, launch, { reason: 'hold', before }]);
       } else if (
-        launch.net - before.net >= POSTPONE_MIN &&
-        before.net > now - BURST_AFTER &&
+        isDelay(before, launch) &&
+        before.net > now - OUTCOME_WATCH &&
         before.net < now + POSTPONE_HORIZON
       ) {
         events.push([TRIGGERS.LAUNCH_POSTPONED, launch, { reason: 'delayed', before }]);
@@ -460,7 +463,13 @@ export class LaunchService {
     }
   }
 
-  /** "Launch soon": every (launch, lead time) reached since the last check. */
+  /**
+   * "Launch soon": every (launch, lead time) reached since the last check.
+   * What fired is remembered per device with the date it fired for: a date
+   * that slips by a few seconds never fires the same alert twice, a refused
+   * event is sent again at the next tick (10 minutes at most) without
+   * repeating the devices that got it.
+   */
   async fireSoonTriggers() {
     const now = this.now();
     const from = this.lastCheck;
@@ -481,20 +490,41 @@ export class LaunchService {
       }
     }
     events.sort((a, b) => a.at - b.at);
+    let failedAt = null;
     for (const { at, launch, lead } of events) {
       const data = this.eventData(TRIGGERS.LAUNCH_SOON, launch, { lead });
-      if (!(await this.fireForScopes(TRIGGERS.LAUNCH_SOON, launch, data))) {
-        // Gladys is unavailable: try again from this event at the next tick,
-        // for 10 minutes at most.
-        this.lastCheck = Math.max(at - 1, now - CATCH_UP);
-        break;
+      for (const scope of scopes(this.config).filter((entry) => entry.match(launch))) {
+        const key = `${launch.id}|${lead}|${scope.key}`;
+        const firedFor = this.fired[key];
+        if (firedFor !== undefined && Math.abs(firedFor - launch.net) < POSTPONE_MIN) {
+          continue;
+        }
+        const device = deviceIds(this.gladys, scope.key).device;
+        if (await this.fireEvent(TRIGGERS.LAUNCH_SOON, { device, ...data })) {
+          this.fired[key] = launch.net;
+        } else {
+          failedAt ??= at;
+        }
+      }
+    }
+    if (failedAt !== null) {
+      // Gladys is unavailable: try again from this event at the next tick.
+      this.lastCheck = Math.max(failedAt - 1, now - CATCH_UP);
+    }
+    for (const [key, net] of Object.entries(this.fired)) {
+      if (net < now - FORGET_AFTER) {
+        delete this.fired[key];
       }
     }
     this.saveTriggers();
   }
 
   saveTriggers() {
-    this.store.save(TRIGGERS_FILE, { lastCheck: this.lastCheck, known: this.known });
+    this.store.save(TRIGGERS_FILE, {
+      lastCheck: this.lastCheck,
+      known: this.known,
+      fired: this.fired,
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -579,4 +609,17 @@ export class LaunchService {
       // Disconnected: the widget refetches on its own TTL.
     }
   }
+}
+
+/**
+ * Did a launch really move later? Only between dates known to the minute
+ * (or to the hour, by an hour at least): a day-only date at 00:00 UTC that
+ * gets its time is a precision gained, not a postponement.
+ */
+export function isDelay(before, launch) {
+  if (!TIMED.has(before.precision ?? 'SEC') || !TIMED.has(launch.precision)) {
+    return false;
+  }
+  const minimum = EXACT.has(before.precision ?? 'SEC') ? POSTPONE_MIN : HOUR;
+  return launch.net - before.net >= minimum;
 }

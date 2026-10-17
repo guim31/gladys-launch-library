@@ -84,7 +84,7 @@ export function formatDay(ms, language, timeZone, style = 'short') {
 const QUARTER = { en: 'Q', fr: 'T', de: 'Q', es: 'T' };
 const HALF = { en: 'H', fr: 'S', de: 'H', es: 'S' };
 
-/** "octobre 2026", in UTC: a launch "NET October" is dated the 1st at 00:00 UTC. */
+/** "octobre 2026", in UTC: a launch "NET October" is dated at 00:00 UTC (the last day, seen in 2026). */
 function formatMonth(ms, language) {
   return formatter(
     `month:${language}`,
@@ -106,11 +106,14 @@ export function formatNet({ net, precision }, language, timeZone) {
   if (precision === 'HR') {
     return `${day} · ~${formatTime(net, language, timeZone)}`;
   }
+  // A day-only date is 00:00 UTC: shown in the zone of Gladys it would be
+  // the day before west of Greenwich.
+  const utcDay = formatDay(net, language, 'UTC', 'short');
   if (['DAY', 'AM', 'PM'].includes(precision)) {
-    return day;
+    return utcDay;
   }
   if (precision === 'W') {
-    return `~${day}`;
+    return `~${utcDay}`;
   }
   if (/^Q[1-4]$/.test(precision)) {
     return `${QUARTER[language]}${precision[1]} ${year}`;
