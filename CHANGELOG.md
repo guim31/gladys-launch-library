@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-17
+
 ### Added
 
 - A "Next launch" device for the dashboard and scene conditions: the next rocket launch in the world
@@ -28,4 +30,5 @@ the notes of the version's GitHub Release.
   hour, under the 15 allowed.
 - Texts and documentation in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-launch-library/commits/main
+[Unreleased]: https://github.com/guim31/gladys-launch-library/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-launch-library/releases/tag/v1.0.0
