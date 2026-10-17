@@ -31,16 +31,22 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
+index.js                          SDK wiring only (src/app.js registers the handlers)
+src/app.js                        every SDK handler -> the service, the "Check" action
+src/service.js                    the clock: readings, cache, states, scene triggers, status
+src/ll2.js                        Launch Library 2 client (hourly margin, 429) + parser
+src/launches.js                   scopes (every launch, filters), next and last launch
+src/device.js                     the "Next launch" devices and their states
 src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/scenes.js                     scene action handlers (manifest `scene_actions`)
+src/i18n.js                       every text of the code, en/fr/de/es
+src/time.js                       launch dates in the Gladys time zone, by precision
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/store.js, src/failures.js     JSON files in /data; repeated failures logged once
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+test/fixtures/ll2/                answers recorded from Launch Library 2, trimmed to the fields read
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +76,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, manifest texts, code texts (`src/i18n.js`) and `docs/{en,fr,de,es}.md`,
+  kept in sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -233,3 +240,29 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Launch Library 2 (cette intégration)
+
+- API **2.3.0**, `https://ll.thespacedevs.com/2.3.0`. Accès anonyme : **15 requêtes par heure** (le point
+  `/api-throttle/` répondait 210 le 17/10/2026, mais la doc publique dit 15 : on vise 15). Aucun en-tête
+  de limite dans les réponses ; un 429 renvoie `{"detail": "Request was throttled. Expected available in
+N seconds."}`, lu par `retryDelay`. Le client s'arrête de lui-même à 12 requêtes par heure glissante.
+- `lldev.thespacedevs.com` : même API, sans limite, mais **base figée et plus ancienne** (des lancements
+  passés y restent « Go »). Bonne pour un essai à la main (`LL2_API_BASE`), pas pour juger les données.
+- `mode=list` n'a ni opérateur ni pas de tir : on lit `mode=normal` (~14 Ko par lancement, 40 lancements
+  ≈ 0,5 Mo). Les **liens de diffusion** (`vid_urls`) ne sont qu'en `mode=detailed` : seul
+  `webcast_live` est exploité.
+- `/launches/upcoming/` contient aussi les lancements **des dernières 24 h** (sauf
+  `hide_recent_previous=true`) : décollage et résultat se voient là, `previous` ne sert qu'au
+  « dernier lancement » des filtres.
+- Statuts (id → clé figée) : 1 go, 2 tbd, 3 success, 4 failure, 5 hold, 6 in_flight, 7 partial_failure,
+  8 tbc, 9 deployed. Précision de `net` par `net_precision.abbrev` : SEC, MIN, HR, DAY, AM, PM, W, M,
+  Q1…Q4, H1, H2, Y… Une date « M » est le 1er du mois à 00:00 UTC (« pas avant le ») : mois et
+  trimestres sont formatés en UTC.
+- Déclencheurs : un événement **par appareil** dont la portée contient le lancement (tous + filtres),
+  avec un champ `device` **obligatoire** (`source: devices`) : un joker ferait tourner une scène deux fois.
+  « Lancement imminent » seulement pour une précision SEC/MIN et un statut go/tbc. Les transitions
+  (décollage, résultat, report) sont mémorisées dans `/data/triggers.json` **avant** l'envoi : jamais
+  deux fois, même après un refus de Gladys.
+- Identifiant d'un appareil de filtre : `filter-<texte replié>` (sans casse, accents ni ponctuation) :
+  « Space X » et « spacex » donnent le même appareil, changer le texte en crée un autre.

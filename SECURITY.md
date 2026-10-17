@@ -30,6 +30,15 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration stores and exchanges:
+
+- `/data/cache.json`: the last answers of Launch Library 2 (upcoming and last launches: public data),
+  and `/data/triggers.json`: the last instant the scene triggers were checked and the last known status
+  and date of each launch. Nothing personal, no secret: the integration asks for no account, no
+  password and no API key. The filters are kept in the Gladys configuration.
+- Network: HTTPS requests to `ll.thespacedevs.com` only, without any identifier, 2 to 7 times an hour
+  (12 at most, under the 15 the service allows).
+
 Out of scope: Gladys Assistant itself (see its
-[security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+[security policy](https://github.com/GladysAssistant/Gladys/security/policy))
+and the Launch Library 2 service.

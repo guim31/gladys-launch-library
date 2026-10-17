@@ -1,177 +1,1094 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Rocket Launches",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Upcoming rocket launches worldwide: countdown, liftoff, results and delays for your scenes.",
+    "fr": "Prochains lancements de fusées : compte à rebours, décollage, résultats et reports pour vos scènes.",
+    "de": "Kommende Raketenstarts weltweit: Countdown, Start, Ergebnisse und Verschiebungen für Szenen.",
+    "es": "Próximos lanzamientos de cohetes: cuenta atrás, despegue, resultados y aplazamientos para escenas."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-launch-library:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-launch-library/main/cover.png",
+  "categories": ["services"],
+  "transports": ["cloud"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "How it works",
+        "fr": "Fonctionnement",
+        "de": "So funktioniert es",
+        "es": "Funcionamiento"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Launches come from Launch Library 2 by The Space Devs, a free database without an account, limited to 15 requests per hour: the integration reads it every 30 minutes, every 10 minutes around a launch. Dates are shown in the Gladys time zone.",
+        "fr": "Les lancements viennent de Launch Library 2 (The Space Devs), une base gratuite sans compte, limitée à 15 requêtes par heure : l'intégration la lit toutes les 30 minutes, toutes les 10 minutes autour d'un lancement. Heures dans le fuseau de Gladys.",
+        "de": "Die Starts kommen aus Launch Library 2 von The Space Devs, einer kostenlosen Datenbank ohne Konto mit 15 Anfragen pro Stunde: Die Integration liest sie alle 30 Minuten, rund um einen Start alle 10 Minuten. Zeiten in der Zeitzone von Gladys.",
+        "es": "Los lanzamientos vienen de Launch Library 2 (The Space Devs), una base gratuita sin cuenta, limitada a 15 solicitudes por hora: la integración la lee cada 30 minutos, cada 10 minutos cerca de un lanzamiento. Horas en la zona horaria de Gladys."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://thespacedevs.com/llapi",
+          "label": {
+            "en": "Launch Library 2",
+            "fr": "Launch Library 2",
+            "de": "Launch Library 2",
+            "es": "Launch Library 2"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
+      "key": "language",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "display": "radio",
+      "label": {
+        "en": "Language of the texts",
+        "fr": "Langue des textes",
+        "de": "Sprache der Texte",
+        "es": "Idioma de los textos"
+      },
+      "description": {
+        "en": "Language of the device and feature names, of the text values and of the scene sentences. Names are set when a device is created: to rename them, delete and re-add the device.",
+        "fr": "Langue des noms d'appareils et de fonctionnalités, des valeurs textuelles et des phrases de scène. Les noms sont fixés à la création : pour les renommer, supprimez puis rajoutez l'appareil.",
+        "de": "Sprache der Geräte- und Funktionsnamen, der Textwerte und der Szenensätze. Die Namen werden beim Anlegen festgelegt: Zum Umbenennen lösche das Gerät und füge es erneut hinzu.",
+        "es": "Idioma de los nombres de dispositivos y funciones, de los valores de texto y de las frases de escena. Los nombres se fijan al crearlos: para cambiarlos, elimine el dispositivo y vuelva a añadirlo."
+      },
       "required": false,
-      "default": "celsius",
+      "default": "fr",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
-      "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
-      },
+      "key": "filters",
+      "type": "string",
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "",
+      "label": {
+        "en": "Filters (one device each)",
+        "fr": "Filtres (un appareil chacun)",
+        "de": "Filter (je ein Gerät)",
+        "es": "Filtros (un dispositivo cada uno)"
+      },
+      "description": {
+        "en": "Up to 5, separated by commas: a provider (SpaceX, Arianespace, ISRO), a rocket (Ariane 6, Starship), a site (Kourou, Florida, Baikonur) or a country code (US, CN). Each filter adds a \"Next launch\" device of its own.",
+        "fr": "Jusqu'à 5, séparés par des virgules : un opérateur (SpaceX, Arianespace, ISRO), une fusée (Ariane 6, Starship), un site (Kourou, Floride, Baïkonour) ou un code pays (US, CN). Chaque filtre ajoute son propre appareil « Prochain lancement ».",
+        "de": "Bis zu 5, durch Kommas getrennt: ein Betreiber (SpaceX, Arianespace, ISRO), eine Rakete (Ariane 6, Starship), ein Ort (Kourou, Florida, Baikonur) oder ein Ländercode (US, CN). Jeder Filter fügt ein eigenes Gerät „Nächster Raketenstart“ hinzu.",
+        "es": "Hasta 5, separados por comas: un operador (SpaceX, Arianespace, ISRO), un cohete (Ariane 6, Starship), un lugar (Kourou, Florida, Baikonur) o un código de país (US, CN). Cada filtro añade su propio dispositivo «Próximo lanzamiento»."
+      },
+      "placeholder": {
+        "en": "SpaceX, Kourou",
+        "fr": "SpaceX, Kourou",
+        "de": "SpaceX, Kourou",
+        "es": "SpaceX, Kourou"
+      }
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
+      "key": "check",
+      "label": {
+        "en": "Check",
+        "fr": "Vérifier",
+        "de": "Prüfen",
+        "es": "Comprobar"
+      },
+      "description": {
+        "en": "Reads Launch Library 2 again now and shows the next launch, your filters and the requests left.",
+        "fr": "Relit Launch Library 2 maintenant et affiche le prochain lancement, vos filtres et les requêtes restantes.",
+        "de": "Liest Launch Library 2 jetzt neu und zeigt den nächsten Start, deine Filter und die verbleibenden Anfragen.",
+        "es": "Vuelve a leer Launch Library 2 ahora y muestra el próximo lanzamiento, sus filtros y las solicitudes restantes."
+      },
+      "timeout_seconds": 60
+    }
+  ],
+  "widgets": [
     {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
+      "key": "upcoming_launches",
+      "label": {
+        "en": "Rocket launches",
+        "fr": "Lancements spatiaux",
+        "de": "Raketenstarts",
+        "es": "Lanzamientos espaciales"
+      },
+      "description": {
+        "en": "Countdown to the next launch and the five next ones, worldwide or for a filter.",
+        "fr": "Compte à rebours du prochain lancement et les cinq suivants, partout ou pour un filtre.",
+        "de": "Countdown bis zum nächsten Start und die fünf nächsten, weltweit oder für einen Filter.",
+        "es": "Cuenta atrás del próximo lanzamiento y los cinco siguientes, en todo el mundo o por filtro."
+      },
+      "icon": "navigation",
+      "settings": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "required": false,
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "Empty: every launch. Otherwise the device of a filter.",
+            "fr": "Vide : tous les lancements. Sinon, l'appareil d'un filtre.",
+            "de": "Leer: alle Starts. Sonst das Gerät eines Filters.",
+            "es": "Vacío: todos los lanzamientos. Si no, el dispositivo de un filtro."
+          }
         }
       ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "launch_soon",
+      "label": {
+        "en": "Launch soon",
+        "fr": "Lancement imminent",
+        "de": "Start steht bevor",
+        "es": "Lanzamiento inminente"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "Fires before a launch whose time is known to the minute and confirmed (Go or to be confirmed), at the lead time chosen.",
+        "fr": "Se déclenche avant un lancement dont l'heure est connue à la minute et confirmée (Go ou à confirmer), à l'avance choisie.",
+        "de": "Löst vor einem Start aus, dessen Uhrzeit minutengenau bekannt und bestätigt ist (Go oder zu bestätigen), mit der gewählten Vorlaufzeit.",
+        "es": "Se activa antes de un lanzamiento cuya hora se conoce al minuto y está confirmada (Go o por confirmar), con la antelación elegida."
       },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "required": true,
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "\"Next launch\" for every launch, or the device of a filter (SpaceX, Kourou…).",
+            "fr": "« Prochain lancement » pour tous les lancements, ou l'appareil d'un filtre (SpaceX, Kourou…).",
+            "de": "„Nächster Raketenstart“ für alle Starts oder das Gerät eines Filters (SpaceX, Kourou…).",
+            "es": "«Próximo lanzamiento» para todos los lanzamientos, o el dispositivo de un filtro (SpaceX, Kourou…)."
+          }
         },
         {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "key": "minutes_before",
+          "type": "select",
+          "required": true,
+          "default": "15",
+          "label": {
+            "en": "When",
+            "fr": "Quand",
+            "de": "Wann",
+            "es": "Cuándo"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "5",
+              "label": {
+                "en": "5 minutes before",
+                "fr": "5 minutes avant",
+                "de": "5 Minuten vorher",
+                "es": "5 minutos antes"
+              }
+            },
+            {
+              "value": "15",
+              "label": {
+                "en": "15 minutes before",
+                "fr": "15 minutes avant",
+                "de": "15 Minuten vorher",
+                "es": "15 minutos antes"
+              }
+            },
+            {
+              "value": "30",
+              "label": {
+                "en": "30 minutes before",
+                "fr": "30 minutes avant",
+                "de": "30 Minuten vorher",
+                "es": "30 minutos antes"
+              }
+            },
+            {
+              "value": "60",
+              "label": {
+                "en": "1 hour before",
+                "fr": "1 heure avant",
+                "de": "1 Stunde vorher",
+                "es": "1 hora antes"
+              }
+            },
+            {
+              "value": "120",
+              "label": {
+                "en": "2 hours before",
+                "fr": "2 heures avant",
+                "de": "2 Stunden vorher",
+                "es": "2 horas antes"
+              }
+            },
+            {
+              "value": "1440",
+              "label": {
+                "en": "24 hours before",
+                "fr": "24 heures avant",
+                "de": "24 Stunden vorher",
+                "es": "24 horas antes"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "sentence",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Sentence ready to send",
+            "fr": "Phrase prête à envoyer",
+            "de": "Fertiger Satz zum Senden",
+            "es": "Frase lista para enviar"
+          }
+        },
+        {
+          "key": "launch_name",
+          "type": "string",
+          "label": {
+            "en": "Launch",
+            "fr": "Lancement",
+            "de": "Start",
+            "es": "Lanzamiento"
+          }
+        },
+        {
+          "key": "mission",
+          "type": "string",
+          "label": {
+            "en": "Mission",
+            "fr": "Mission",
+            "de": "Mission",
+            "es": "Misión"
+          }
+        },
+        {
+          "key": "rocket",
+          "type": "string",
+          "label": {
+            "en": "Rocket",
+            "fr": "Fusée",
+            "de": "Rakete",
+            "es": "Cohete"
+          }
+        },
+        {
+          "key": "provider",
+          "type": "string",
+          "label": {
+            "en": "Launch provider",
+            "fr": "Opérateur",
+            "de": "Betreiber",
+            "es": "Operador"
+          }
+        },
+        {
+          "key": "location",
+          "type": "string",
+          "label": {
+            "en": "Launch site",
+            "fr": "Site de lancement",
+            "de": "Startplatz",
+            "es": "Lugar de lanzamiento"
+          }
+        },
+        {
+          "key": "launch_date",
+          "type": "string",
+          "label": {
+            "en": "Launch date",
+            "fr": "Date du lancement",
+            "de": "Startdatum",
+            "es": "Fecha del lanzamiento"
+          }
+        },
+        {
+          "key": "status_name",
+          "type": "string",
+          "label": {
+            "en": "Status",
+            "fr": "Statut",
+            "de": "Status",
+            "es": "Estado"
+          }
+        },
+        {
+          "key": "webcast_live",
+          "type": "boolean",
+          "label": {
+            "en": "Webcast live",
+            "fr": "Diffusion en direct",
+            "de": "Livestream läuft",
+            "es": "Emisión en directo"
+          }
+        },
+        {
+          "key": "minutes_before",
+          "type": "number",
+          "label": {
+            "en": "Minutes before",
+            "fr": "Minutes avant",
+            "de": "Minuten vorher",
+            "es": "Minutos antes"
+          }
+        }
+      ]
+    },
+    {
+      "key": "liftoff",
+      "label": {
+        "en": "Liftoff",
+        "fr": "Décollage",
+        "de": "Abheben",
+        "es": "Despegue"
+      },
+      "description": {
+        "en": "Fires when Launch Library 2 reports the rocket in flight, usually within 10 minutes of liftoff.",
+        "fr": "Se déclenche quand Launch Library 2 signale la fusée en vol, en général dans les 10 minutes après le décollage.",
+        "de": "Löst aus, wenn Launch Library 2 die Rakete im Flug meldet, meist innerhalb von 10 Minuten nach dem Abheben.",
+        "es": "Se activa cuando Launch Library 2 indica el cohete en vuelo, normalmente en los 10 minutos posteriores al despegue."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "required": true,
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "\"Next launch\" for every launch, or the device of a filter (SpaceX, Kourou…).",
+            "fr": "« Prochain lancement » pour tous les lancements, ou l'appareil d'un filtre (SpaceX, Kourou…).",
+            "de": "„Nächster Raketenstart“ für alle Starts oder das Gerät eines Filters (SpaceX, Kourou…).",
+            "es": "«Próximo lanzamiento» para todos los lanzamientos, o el dispositivo de un filtro (SpaceX, Kourou…)."
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "sentence",
+          "type": "string",
+          "label": {
+            "en": "Sentence ready to send",
+            "fr": "Phrase prête à envoyer",
+            "de": "Fertiger Satz zum Senden",
+            "es": "Frase lista para enviar"
+          }
+        },
+        {
+          "key": "launch_name",
+          "type": "string",
+          "label": {
+            "en": "Launch",
+            "fr": "Lancement",
+            "de": "Start",
+            "es": "Lanzamiento"
+          }
+        },
+        {
+          "key": "mission",
+          "type": "string",
+          "label": {
+            "en": "Mission",
+            "fr": "Mission",
+            "de": "Mission",
+            "es": "Misión"
+          }
+        },
+        {
+          "key": "rocket",
+          "type": "string",
+          "label": {
+            "en": "Rocket",
+            "fr": "Fusée",
+            "de": "Rakete",
+            "es": "Cohete"
+          }
+        },
+        {
+          "key": "provider",
+          "type": "string",
+          "label": {
+            "en": "Launch provider",
+            "fr": "Opérateur",
+            "de": "Betreiber",
+            "es": "Operador"
+          }
+        },
+        {
+          "key": "location",
+          "type": "string",
+          "label": {
+            "en": "Launch site",
+            "fr": "Site de lancement",
+            "de": "Startplatz",
+            "es": "Lugar de lanzamiento"
+          }
+        },
+        {
+          "key": "launch_date",
+          "type": "string",
+          "label": {
+            "en": "Launch date",
+            "fr": "Date du lancement",
+            "de": "Startdatum",
+            "es": "Fecha del lanzamiento"
+          }
+        },
+        {
+          "key": "status_name",
+          "type": "string",
+          "label": {
+            "en": "Status",
+            "fr": "Statut",
+            "de": "Status",
+            "es": "Estado"
+          }
+        },
+        {
+          "key": "webcast_live",
+          "type": "boolean",
+          "label": {
+            "en": "Webcast live",
+            "fr": "Diffusion en direct",
+            "de": "Livestream läuft",
+            "es": "Emisión en directo"
+          }
+        }
+      ]
+    },
+    {
+      "key": "launch_result",
+      "label": {
+        "en": "Launch result",
+        "fr": "Résultat du lancement",
+        "de": "Startergebnis",
+        "es": "Resultado del lanzamiento"
+      },
+      "description": {
+        "en": "Fires when the outcome of a launch is published: success, failure or partial failure.",
+        "fr": "Se déclenche quand le résultat d'un lancement est publié : réussite, échec ou échec partiel.",
+        "de": "Löst aus, wenn das Ergebnis eines Starts veröffentlicht wird: Erfolg, Fehlschlag oder Teilerfolg.",
+        "es": "Se activa cuando se publica el resultado de un lanzamiento: éxito, fallo o fallo parcial."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "required": true,
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "\"Next launch\" for every launch, or the device of a filter (SpaceX, Kourou…).",
+            "fr": "« Prochain lancement » pour tous les lancements, ou l'appareil d'un filtre (SpaceX, Kourou…).",
+            "de": "„Nächster Raketenstart“ für alle Starts oder das Gerät eines Filters (SpaceX, Kourou…).",
+            "es": "«Próximo lanzamiento» para todos los lanzamientos, o el dispositivo de un filtro (SpaceX, Kourou…)."
+          }
+        },
+        {
+          "key": "result",
+          "type": "multi_select",
+          "label": {
+            "en": "Results",
+            "fr": "Résultats",
+            "de": "Ergebnisse",
+            "es": "Resultados"
+          },
+          "description": {
+            "en": "Empty: every result.",
+            "fr": "Vide : tous les résultats.",
+            "de": "Leer: alle Ergebnisse.",
+            "es": "Vacío: todos los resultados."
+          },
+          "options": [
+            {
+              "value": "success",
+              "label": {
+                "en": "Success",
+                "fr": "Réussi",
+                "de": "Erfolgreich",
+                "es": "Éxito"
+              }
+            },
+            {
+              "value": "failure",
+              "label": {
+                "en": "Failure",
+                "fr": "Échec",
+                "de": "Fehlschlag",
+                "es": "Fallo"
+              }
+            },
+            {
+              "value": "partial_failure",
+              "label": {
+                "en": "Partial failure",
+                "fr": "Échec partiel",
+                "de": "Teilerfolg",
+                "es": "Fallo parcial"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "sentence",
+          "type": "string",
+          "label": {
+            "en": "Sentence ready to send",
+            "fr": "Phrase prête à envoyer",
+            "de": "Fertiger Satz zum Senden",
+            "es": "Frase lista para enviar"
+          }
+        },
+        {
+          "key": "launch_name",
+          "type": "string",
+          "label": {
+            "en": "Launch",
+            "fr": "Lancement",
+            "de": "Start",
+            "es": "Lanzamiento"
+          }
+        },
+        {
+          "key": "mission",
+          "type": "string",
+          "label": {
+            "en": "Mission",
+            "fr": "Mission",
+            "de": "Mission",
+            "es": "Misión"
+          }
+        },
+        {
+          "key": "rocket",
+          "type": "string",
+          "label": {
+            "en": "Rocket",
+            "fr": "Fusée",
+            "de": "Rakete",
+            "es": "Cohete"
+          }
+        },
+        {
+          "key": "provider",
+          "type": "string",
+          "label": {
+            "en": "Launch provider",
+            "fr": "Opérateur",
+            "de": "Betreiber",
+            "es": "Operador"
+          }
+        },
+        {
+          "key": "location",
+          "type": "string",
+          "label": {
+            "en": "Launch site",
+            "fr": "Site de lancement",
+            "de": "Startplatz",
+            "es": "Lugar de lanzamiento"
+          }
+        },
+        {
+          "key": "launch_date",
+          "type": "string",
+          "label": {
+            "en": "Launch date",
+            "fr": "Date du lancement",
+            "de": "Startdatum",
+            "es": "Fecha del lanzamiento"
+          }
+        },
+        {
+          "key": "status_name",
+          "type": "string",
+          "label": {
+            "en": "Status",
+            "fr": "Statut",
+            "de": "Status",
+            "es": "Estado"
+          }
+        },
+        {
+          "key": "webcast_live",
+          "type": "boolean",
+          "label": {
+            "en": "Webcast live",
+            "fr": "Diffusion en direct",
+            "de": "Livestream läuft",
+            "es": "Emisión en directo"
+          }
+        },
+        {
+          "key": "result",
+          "type": "string",
+          "label": {
+            "en": "Result (success, failure, partial_failure)",
+            "fr": "Résultat (success, failure, partial_failure)",
+            "de": "Ergebnis (success, failure, partial_failure)",
+            "es": "Resultado (success, failure, partial_failure)"
+          }
+        },
+        {
+          "key": "result_name",
+          "type": "string",
+          "label": {
+            "en": "Result",
+            "fr": "Résultat",
+            "de": "Ergebnis",
+            "es": "Resultado"
+          }
+        },
+        {
+          "key": "fail_reason",
+          "type": "string",
+          "label": {
+            "en": "Failure reason (English)",
+            "fr": "Cause de l'échec (en anglais)",
+            "de": "Fehlerursache (Englisch)",
+            "es": "Causa del fallo (en inglés)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "launch_postponed",
+      "label": {
+        "en": "Launch postponed",
+        "fr": "Lancement reporté",
+        "de": "Start verschoben",
+        "es": "Lanzamiento aplazado"
+      },
+      "description": {
+        "en": "Fires when a launch planned within 48 hours moves 15 minutes or more later, or is put on hold.",
+        "fr": "Se déclenche quand un lancement prévu dans les 48 heures recule de 15 minutes ou plus, ou est suspendu.",
+        "de": "Löst aus, wenn ein innerhalb von 48 Stunden geplanter Start um 15 Minuten oder mehr verschoben oder angehalten wird.",
+        "es": "Se activa cuando un lanzamiento previsto en las próximas 48 horas se retrasa 15 minutos o más, o queda en espera."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "required": true,
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "\"Next launch\" for every launch, or the device of a filter (SpaceX, Kourou…).",
+            "fr": "« Prochain lancement » pour tous les lancements, ou l'appareil d'un filtre (SpaceX, Kourou…).",
+            "de": "„Nächster Raketenstart“ für alle Starts oder das Gerät eines Filters (SpaceX, Kourou…).",
+            "es": "«Próximo lanzamiento» para todos los lanzamientos, o el dispositivo de un filtro (SpaceX, Kourou…)."
+          }
+        },
+        {
+          "key": "reason",
+          "type": "select",
+          "label": {
+            "en": "Reason",
+            "fr": "Motif",
+            "de": "Grund",
+            "es": "Motivo"
+          },
+          "description": {
+            "en": "Empty: both.",
+            "fr": "Vide : les deux.",
+            "de": "Leer: beide.",
+            "es": "Vacío: ambos."
+          },
+          "options": [
+            {
+              "value": "delayed",
+              "label": {
+                "en": "New date",
+                "fr": "Nouvelle date",
+                "de": "Neues Datum",
+                "es": "Nueva fecha"
+              }
+            },
+            {
+              "value": "hold",
+              "label": {
+                "en": "On hold",
+                "fr": "Suspendu",
+                "de": "Angehalten",
+                "es": "En espera"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "sentence",
+          "type": "string",
+          "label": {
+            "en": "Sentence ready to send",
+            "fr": "Phrase prête à envoyer",
+            "de": "Fertiger Satz zum Senden",
+            "es": "Frase lista para enviar"
+          }
+        },
+        {
+          "key": "launch_name",
+          "type": "string",
+          "label": {
+            "en": "Launch",
+            "fr": "Lancement",
+            "de": "Start",
+            "es": "Lanzamiento"
+          }
+        },
+        {
+          "key": "mission",
+          "type": "string",
+          "label": {
+            "en": "Mission",
+            "fr": "Mission",
+            "de": "Mission",
+            "es": "Misión"
+          }
+        },
+        {
+          "key": "rocket",
+          "type": "string",
+          "label": {
+            "en": "Rocket",
+            "fr": "Fusée",
+            "de": "Rakete",
+            "es": "Cohete"
+          }
+        },
+        {
+          "key": "provider",
+          "type": "string",
+          "label": {
+            "en": "Launch provider",
+            "fr": "Opérateur",
+            "de": "Betreiber",
+            "es": "Operador"
+          }
+        },
+        {
+          "key": "location",
+          "type": "string",
+          "label": {
+            "en": "Launch site",
+            "fr": "Site de lancement",
+            "de": "Startplatz",
+            "es": "Lugar de lanzamiento"
+          }
+        },
+        {
+          "key": "launch_date",
+          "type": "string",
+          "label": {
+            "en": "Launch date",
+            "fr": "Date du lancement",
+            "de": "Startdatum",
+            "es": "Fecha del lanzamiento"
+          }
+        },
+        {
+          "key": "status_name",
+          "type": "string",
+          "label": {
+            "en": "Status",
+            "fr": "Statut",
+            "de": "Status",
+            "es": "Estado"
+          }
+        },
+        {
+          "key": "webcast_live",
+          "type": "boolean",
+          "label": {
+            "en": "Webcast live",
+            "fr": "Diffusion en direct",
+            "de": "Livestream läuft",
+            "es": "Emisión en directo"
+          }
+        },
+        {
+          "key": "reason",
+          "type": "string",
+          "label": {
+            "en": "Reason (delayed, hold)",
+            "fr": "Motif (delayed, hold)",
+            "de": "Grund (delayed, hold)",
+            "es": "Motivo (delayed, hold)"
+          }
+        },
+        {
+          "key": "previous_date",
+          "type": "string",
+          "label": {
+            "en": "Previous date",
+            "fr": "Date précédente",
+            "de": "Vorheriges Datum",
+            "es": "Fecha anterior"
+          }
+        },
+        {
+          "key": "delay_minutes",
+          "type": "number",
+          "label": {
+            "en": "Delay in minutes",
+            "fr": "Retard en minutes",
+            "de": "Verschiebung in Minuten",
+            "es": "Retraso en minutos"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "read_next_launch",
+      "label": {
+        "en": "Read the next launch",
+        "fr": "Lire le prochain lancement",
+        "de": "Nächsten Start lesen",
+        "es": "Leer el próximo lanzamiento"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "A sentence ready to send: launch, provider, site, date in your local time and status.",
+        "fr": "Une phrase prête à envoyer : lancement, opérateur, site, date à l'heure locale et statut.",
+        "de": "Ein fertiger Satz zum Senden: Start, Betreiber, Ort, Datum in Ortszeit und Status.",
+        "es": "Una frase lista para enviar: lanzamiento, operador, lugar, fecha en hora local y estado."
+      },
+      "timeout_seconds": 10,
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "required": false,
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "Empty: every launch. Otherwise the device of a filter.",
+            "fr": "Vide : tous les lancements. Sinon, l'appareil d'un filtre.",
+            "de": "Leer: alle Starts. Sonst das Gerät eines Filters.",
+            "es": "Vacío: todos los lanzamientos. Si no, el dispositivo de un filtro."
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "sentence",
+          "type": "string",
+          "label": {
+            "en": "Sentence ready to send",
+            "fr": "Phrase prête à envoyer",
+            "de": "Fertiger Satz zum Senden",
+            "es": "Frase lista para enviar"
+          }
+        },
+        {
+          "key": "launch_name",
+          "type": "string",
+          "label": {
+            "en": "Launch",
+            "fr": "Lancement",
+            "de": "Start",
+            "es": "Lanzamiento"
+          }
+        },
+        {
+          "key": "provider",
+          "type": "string",
+          "label": {
+            "en": "Launch provider",
+            "fr": "Opérateur",
+            "de": "Betreiber",
+            "es": "Operador"
+          }
+        },
+        {
+          "key": "location",
+          "type": "string",
+          "label": {
+            "en": "Launch site",
+            "fr": "Site de lancement",
+            "de": "Startplatz",
+            "es": "Lugar de lanzamiento"
+          }
+        },
+        {
+          "key": "launch_date",
+          "type": "string",
+          "label": {
+            "en": "Launch date",
+            "fr": "Date du lancement",
+            "de": "Startdatum",
+            "es": "Fecha del lanzamiento"
+          }
+        },
+        {
+          "key": "hours_until",
+          "type": "number",
+          "label": {
+            "en": "Hours until launch (-1: none)",
+            "fr": "Heures avant le lancement (-1 : aucun)",
+            "de": "Stunden bis zum Start (-1: keiner)",
+            "es": "Horas hasta el lanzamiento (-1: ninguno)"
+          }
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "label": {
+            "en": "Status (go, tbc, tbd, hold)",
+            "fr": "Statut (go, tbc, tbd, hold)",
+            "de": "Status (go, tbc, tbd, hold)",
+            "es": "Estado (go, tbc, tbd, hold)"
+          }
         }
       ]
-    }
-  ],
-  "widgets": [
+    },
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "read_upcoming_launches",
+      "label": {
+        "en": "Read the next launches",
+        "fr": "Lire les prochains lancements",
+        "de": "Nächste Starts lesen",
+        "es": "Leer los próximos lanzamientos"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "A sentence listing the next launches with their date, worldwide or for a filter.",
+        "fr": "Une phrase qui liste les prochains lancements avec leur date, partout ou pour un filtre.",
+        "de": "Ein Satz mit den nächsten Starts und ihrem Datum, weltweit oder für einen Filter.",
+        "es": "Una frase con los próximos lanzamientos y su fecha, en todo el mundo o por filtro."
+      },
+      "timeout_seconds": 10,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "required": false,
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "Empty: every launch. Otherwise the device of a filter.",
+            "fr": "Vide : tous les lancements. Sinon, l'appareil d'un filtre.",
+            "de": "Leer: alle Starts. Sonst das Gerät eines Filters.",
+            "es": "Vacío: todos los lanzamientos. Si no, el dispositivo de un filtro."
+          }
+        },
+        {
+          "key": "count",
+          "type": "number",
+          "required": false,
+          "default": 3,
+          "min": 1,
+          "max": 5,
+          "label": {
+            "en": "Number of launches",
+            "fr": "Nombre de lancements",
+            "de": "Anzahl der Starts",
+            "es": "Número de lanzamientos"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "key": "sentence",
+          "type": "string",
+          "label": {
+            "en": "Sentence ready to send",
+            "fr": "Phrase prête à envoyer",
+            "de": "Fertiger Satz zum Senden",
+            "es": "Frase lista para enviar"
+          }
+        },
+        {
+          "key": "count",
+          "type": "number",
+          "label": {
+            "en": "Launches listed",
+            "fr": "Lancements listés",
+            "de": "Aufgeführte Starts",
+            "es": "Lanzamientos listados"
+          }
+        }
+      ]
     }
   ]
 }

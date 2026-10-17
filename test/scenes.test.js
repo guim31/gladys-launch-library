@@ -1,93 +1,35 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
-import { DEVICE_BLUEPRINTS } from '../src/devices/index.js';
-import { MOTION_DETECTED_TRIGGER, motionSensor } from '../src/devices/motionSensor.js';
-import { SCENE_ACTIONS } from '../src/scenes.js';
-import { normalizeConfig } from '../src/config.js';
+import { createWorld, fakeLL2 } from './helpers/world.js';
 
-const manifest = JSON.parse(
-  await readFile(new URL('../gladys-assistant-integration.json', import.meta.url), 'utf8'),
-);
-const config = normalizeConfig();
-
-const declarationOf = (list, key) => manifest[list].find((entry) => entry.key === key);
-const keysOf = (list) => (list ?? []).map((entry) => entry.key);
-const deviceIdOf = (gladys, key) =>
-  DEVICE_BLUEPRINTS.find((bp) => bp.key === key).deviceExternalId(gladys);
-
-// Let the async interval callback run to completion.
-const flush = () => new Promise((resolve) => setImmediate(resolve));
-
-test('the motion sensor fires one motion_detected event per detection, none on the clear', async (t) => {
-  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
-  const gladys = createFakeGladys();
-  const stopPush = motionSensor.startPush(gladys, config);
-  try {
-    t.mock.timers.tick(60_000);
-    await flush();
-    assert.equal(gladys.fake.sceneEvents.length, 1, 'one detection, one event');
-    assert.equal(gladys.fake.sceneEvents[0].key, MOTION_DETECTED_TRIGGER);
-    assert.equal(gladys.fake.states.at(-1).state, 1, 'the state is still published');
-
-    t.mock.timers.tick(10_000);
-    await flush();
-    assert.equal(gladys.fake.states.at(-1).state, 0, 'the detection is cleared');
-    assert.equal(gladys.fake.sceneEvents.length, 1, 'the clear fires no event');
-  } finally {
-    stopPush();
-  }
-});
-
-test('motion_detected data only carries keys the trigger declares', async (t) => {
-  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
-  const gladys = createFakeGladys();
-  const stopPush = motionSensor.startPush(gladys, config);
-  try {
-    t.mock.timers.tick(60_000);
-    await flush();
-  } finally {
-    stopPush();
-  }
-  const [{ data }] = gladys.fake.sceneEvents;
-  const trigger = declarationOf('scene_triggers', MOTION_DETECTED_TRIGGER);
-  // The core keeps the `fields` keys (filters) and the `variables` keys
-  // (exposed to the scene): any other key would be silently dropped.
-  const declared = [...keysOf(trigger.fields), ...keysOf(trigger.variables)];
-  for (const [key, value] of Object.entries(data)) {
-    assert.ok(declared.includes(key), `data.${key} is not declared, the core would drop it`);
-    assert.ok(value === null || typeof value !== 'object', `data.${key} must be a primitive`);
-  }
-  // A `"source": "devices"` filter stores a device external_id.
-  assert.equal(data.device, deviceIdOf(gladys, 'motion-sensor'));
-  const targets = trigger.fields.find((field) => field.key === 'target').options;
-  assert.ok(
-    targets.some((option) => option.value === data.target),
-    `data.target "${data.target}" must be one of the filter options`,
+test('read the next launch: worldwide or for a filter, in the configured language', async (t) => {
+  const world = await createWorld({ config: { language: 'es', filters: 'Japan' } });
+  t.after(() => world.app.stop());
+  const all = await world.gladys.fake.sceneAction('read_next_launch', {});
+  assert.equal(
+    all.data.outputs.sentence,
+    'Próximo lanzamiento: Falcon 9 Block 5 | Bandwagon 5 (Dedicated Mid-Inclination Rideshare) (SpaceX), desde Cape Canaveral SFS, FL, USA, lun, 19 oct · 12:30. Estado: Go.',
   );
+  assert.equal(all.data.outputs.hours_until, 43);
+  const japan = await world.gladys.fake.sceneAction('read_next_launch', {
+    device: world.device('filter-japan').external_id,
+  });
+  assert.match(japan.data.outputs.launch_name, /^H3-24/);
+  assert.equal(japan.data.outputs.provider, 'Mitsubishi Heavy Industries');
 });
 
-test('identify_device signals the chosen device and returns the declared outputs', async () => {
-  const gladys = createFakeGladys();
-  const outputs = await SCENE_ACTIONS.identify_device(gladys, {
-    fields: { device: deviceIdOf(gladys, 'light') },
-    config,
-  });
-  assert.deepEqual(outputs, { signalled: true });
-  const declared = keysOf(declarationOf('scene_actions', 'identify_device').outputs);
-  for (const key of Object.keys(outputs)) {
-    assert.ok(declared.includes(key), `output "${key}" is not declared, the core would drop it`);
-  }
-});
+test('read the next launches: 1 to 5, a clear sentence without data', async (t) => {
+  const world = await createWorld({ config: { language: 'en' } });
+  t.after(() => world.app.stop());
+  const five = await world.gladys.fake.sceneAction('read_upcoming_launches', { count: 50 });
+  assert.equal(five.data.outputs.count, 5);
+  assert.match(five.data.outputs.sentence, /^Next launches: 1\. Falcon 9 .*; 5\. /);
+  const one = await world.gladys.fake.sceneAction('read_upcoming_launches', { count: 1 });
+  assert.equal(one.data.outputs.count, 1);
 
-test('identify_device reports a device that cannot signal itself through its output', async () => {
-  // Not a failure: a scene action is never a condition, the scene author
-  // gates the following actions on the output instead.
-  const gladys = createFakeGladys();
-  const outputs = await SCENE_ACTIONS.identify_device(gladys, {
-    fields: { device: deviceIdOf(gladys, 'weather-station') },
-    config,
-  });
-  assert.deepEqual(outputs, { signalled: false });
+  const down = await createWorld({ api: fakeLL2({ fail: true }), config: { language: 'en' } });
+  t.after(() => down.app.stop());
+  const nothing = await down.gladys.fake.sceneAction('read_next_launch', {});
+  assert.equal(nothing.data.outputs.sentence, 'The launch schedule has not been read yet.');
+  assert.equal(nothing.data.outputs.hours_until, -1);
 });
