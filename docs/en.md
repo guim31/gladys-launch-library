@@ -1,61 +1,129 @@
-# Demo Devices Template
+# Rocket Launches
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+Upcoming rocket launches from around the world in Gladys: SpaceX, Arianespace, ULA, Rocket Lab, ISRO,
+JAXA, Chinese launchers… The data comes from **Launch Library 2**, the free and open database of
+[The Space Devs](https://thespacedevs.com/llapi), updated by its community in real time.
 
-## What you get
+## What it does
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+- A **Next launch** device: name, date in your local time, hours left, status, provider, rocket,
+  launch site, live webcast, "launch today", and the last launch with its result.
+- One more device per **filter** you choose (SpaceX, Kourou, Ariane 6…), with the same features.
+- A **Rocket launches** dashboard widget: countdown to the next launch and the five next ones.
+- Four **scene triggers**: launch soon, liftoff, launch result, launch postponed.
+- Two **scene actions** that return a sentence ready to send or to say aloud.
+
+## Requirements
+
+- Gladys Assistant 5.1 or later (5.2 for the details panel of the widget).
+- Internet access from Gladys. No account, no key: Launch Library 2 is free for personal use.
 
 ## Configuration
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+1. Install the integration, then open its **Configuration** tab.
+2. Choose the **language of the texts**: device and feature names, text values and scene sentences
+   (French by default). Names are set when a device is created: to rename them, delete and re-add
+   the device.
+3. Optionally type **filters** (see below), then save.
+4. In the **Discovery** tab, add the **Next launch** device, and the device of each filter.
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+The **Check** button reads Launch Library 2 again at once and shows the next launch, the number of
+launches of each filter and the requests left this hour.
 
-## Actions
+### Filters
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+Up to five, separated by commas. A filter matches the launches whose provider, rocket, mission,
+launch site or country contains the text, without case or accents: `SpaceX`, `Arianespace`, `ISRO`,
+`Ariane 6`, `Starship`, `Starlink`, `Vandenberg`. A few usual names are understood too: `Kourou`
+(Guiana Space Centre), `Florida`, `California`, `Baikonur`, `China`, `India`, `Japan`, `Europe`
+(Arianespace, ESA, Avio). Codes of three characters or less match whole words: a country code
+(`US`, `CN`, `GF`), a provider code (`ULA`, `SpX`) or a rocket (`H3`).
 
-## Scenes
+Each filter adds a device named "Next launch · <filter>". Changing the text of a filter creates a new
+device: delete the old one from Gladys.
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+## Devices
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+All features are read only.
 
-## Dashboard
+| Feature                              | Value                                                                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Launch                               | Rocket and mission, as Launch Library 2 names them: "Falcon 9 Block 5 \| Starlink Group 15-15"                            |
+| Launch date                          | As precise as it is known: "Mon, Oct 19 · 12:30", "~12:30" for a time known to the hour, a day, "October 2026", "Q4 2026" |
+| Hours until launch                   | Whole hours before the date (No Earlier Than), 0 when it is reached                                                       |
+| Launches within 7 days               | Upcoming launches of the device in the next 7 days                                                                        |
+| Launch status                        | Go, To be confirmed, To be determined, On hold                                                                            |
+| Launch provider, Rocket, Launch site | From Launch Library 2                                                                                                     |
+| Webcast live                         | 1 while the official webcast is live                                                                                      |
+| Launch today                         | 1 when the next launch is today (when its day is known)                                                                   |
+| Last launch, Last launch result      | The last launch that left the ground, and its outcome: In flight, Success, Failure, Partial failure                       |
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+The next launch is the first one that has not left the ground yet. Launch dates are often "No Earlier
+Than": a launch planned for "October 2026" is dated the first day of the month.
+
+## Dashboard widget
+
+**Rocket launches** shows the countdown to the next launch, the number of launches within 7 days and
+the five next launches with their date, provider and status. Tap a launch to read its mission. The
+**Device** setting limits it to the launches of a filter; empty, it shows every launch.
+
+## Scene triggers
+
+Each trigger asks for a **device**: "Next launch" for every launch in the world, or the device of a
+filter. A launch matching several devices fires once per device, so a scene runs once.
+
+- **Launch soon**: 5, 15 or 30 minutes, 1, 2 or 24 hours before a launch whose time is known to the
+  minute and whose status is Go or To be confirmed. A launch that moves fires again at its new time.
+- **Liftoff**: when Launch Library 2 reports the rocket in flight, usually within 10 minutes.
+- **Launch result**: success, failure or partial failure (filter optional), with the failure reason
+  (in English).
+- **Launch postponed**: a launch planned within 48 hours moves 15 minutes or more later ("New date"),
+  or is put on hold ("On hold").
+
+Every trigger passes on a **sentence ready to send**, the launch, mission, rocket, provider, site,
+date and status, and its own details (minutes before, result, previous date, delay).
+
+## Scene actions
+
+- **Read the next launch**: a sentence such as "Next launch: Falcon 9 Block 5 | Bandwagon 5 (SpaceX),
+  from Cape Canaveral SFS, FL, USA, Mon, Oct 19 · 12:30. Status: Go.", and the launch, provider,
+  site, date, hours left (-1 when none) and status.
+- **Read the next launches**: one sentence listing the next 1 to 5 launches with their date.
+
+Both accept an optional device to keep to a filter.
+
+## Scene examples
+
+- **Launch soon** (Next launch · Kourou, 15 minutes before) → send the sentence of the trigger to your
+  phone.
+- **Liftoff** (Next launch · SpaceX) → turn the living room light blue, then say the sentence on the
+  speaker.
+- Every morning at 8:00 → **Read the next launches** (3) → send the sentence in a message.
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **Nothing in the devices**: Launch Library 2 has not been read yet. Press **Check**: it shows the
+  error, if any.
+- **"Request limit reached"**: Launch Library 2 allows 15 requests per hour without an account, and
+  answers 429 beyond. The integration waits the time announced and reads again on its own. Avoid
+  pressing **Check** many times in a row: it uses 2 requests each time.
+- **A filter matches nothing**: press **Check** to see how many launches each filter matches. A filter
+  only sees the next 40 launches in the world, about one or two months.
+- Set `LOG_LEVEL=debug` on the container to see each reading.
+
+## Limits
+
+- Launch Library 2 is free and anonymous but limited to **15 requests per hour**: the integration reads
+  the upcoming launches every 30 minutes, every 10 minutes from an hour before a launch until its
+  outcome is known, and the last launches every 2 hours: 2 to 7 requests an hour. Its own margin is
+  12 per hour.
+- Liftoff and results are seen at the next reading: up to 10 minutes late.
+- The data is the one of the Launch Library 2 community: a date may change at the last minute, a
+  result may be published hours later.
+- The webcast links are not available in this mode of the API: only the "live" flag.
+- This integration is not affiliated with The Space Devs nor with any launch provider.
+
+## Credits
+
+Launch data: [Launch Library 2](https://thespacedevs.com/llapi) by The Space Devs. Integration by
+guim31, under the Apache 2.0 license.

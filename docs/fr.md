@@ -1,67 +1,140 @@
-# Template de démonstration
+# Lancements spatiaux
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Les prochains lancements de fusées du monde entier dans Gladys : SpaceX, Arianespace, ULA, Rocket Lab,
+ISRO, JAXA, lanceurs chinois… Les données viennent de **Launch Library 2**, la base libre et gratuite
+de [The Space Devs](https://thespacedevs.com/llapi), tenue à jour par sa communauté en temps réel.
 
-## Ce que vous obtenez
+## Ce que fait l'intégration
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+- Un appareil **Prochain lancement** : nom, date à votre heure locale, heures restantes, statut,
+  opérateur, fusée, site de lancement, diffusion en direct, « lancement aujourd'hui », et le dernier
+  lancement avec son résultat.
+- Un appareil de plus par **filtre** choisi (SpaceX, Kourou, Ariane 6…), avec les mêmes
+  fonctionnalités.
+- Un widget **Lancements spatiaux** : compte à rebours du prochain lancement et les cinq suivants.
+- Quatre **déclencheurs de scène** : lancement imminent, décollage, résultat du lancement, lancement
+  reporté.
+- Deux **actions de scène** qui renvoient une phrase prête à envoyer ou à lire à voix haute.
+
+## Prérequis
+
+- Gladys Assistant 5.1 ou plus récent (5.2 pour le panneau de détail du widget).
+- Un accès Internet depuis Gladys. Ni compte, ni clé : Launch Library 2 est gratuit pour un usage
+  personnel.
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+1. Installez l'intégration, puis ouvrez son onglet **Configuration**.
+2. Choisissez la **langue des textes** : noms d'appareils et de fonctionnalités, valeurs textuelles et
+   phrases de scène (français par défaut). Les noms sont fixés à la création d'un appareil : pour les
+   renommer, supprimez puis rajoutez l'appareil.
+3. Saisissez si vous le souhaitez des **filtres** (voir ci-dessous), puis enregistrez.
+4. Dans l'onglet **Découverte**, ajoutez l'appareil **Prochain lancement**, et l'appareil de chaque
+   filtre.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+Le bouton **Vérifier** relit Launch Library 2 tout de suite et affiche le prochain lancement, le
+nombre de lancements de chaque filtre et les requêtes restantes dans l'heure.
 
-## Actions
+### Filtres
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+Jusqu'à cinq, séparés par des virgules. Un filtre retient les lancements dont l'opérateur, la fusée, la
+mission, le site ou le pays contient le texte, sans tenir compte des majuscules ni des accents :
+`SpaceX`, `Arianespace`, `ISRO`, `Ariane 6`, `Starship`, `Starlink`, `Vandenberg`. Quelques noms usuels
+sont compris aussi : `Kourou` (Centre spatial guyanais), `Floride`, `Californie`, `Baïkonour`, `Chine`,
+`Inde`, `Japon`, `Europe` (Arianespace, ESA, Avio). Un code de trois caractères ou moins désigne un
+mot entier : un code pays (`US`, `CN`, `GF`), un code d'opérateur (`ULA`, `SpX`) ou une fusée (`H3`).
 
-## Scènes
+Chaque filtre ajoute un appareil nommé « Prochain lancement · <filtre> ». Modifier le texte d'un filtre
+crée un nouvel appareil : supprimez l'ancien dans Gladys.
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+## Appareils
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+Toutes les fonctionnalités sont en lecture seule.
 
-## Tableau de bord
+| Fonctionnalité                                   | Valeur                                                                                                                                               |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lancement                                        | Fusée et mission, telles que Launch Library 2 les nomme : « Falcon 9 Block 5 \| Starlink Group 15-15 »                                               |
+| Date du lancement                                | Aussi précise qu'elle est connue : « lun. 19 oct. · 12:30 », « ~12:30 » pour une heure connue à l'heure près, un jour, « octobre 2026 », « T4 2026 » |
+| Heures avant le lancement                        | Heures entières avant la date (« pas avant le »), 0 une fois atteinte                                                                                |
+| Lancements sous 7 jours                          | Lancements à venir de l'appareil dans les 7 prochains jours                                                                                          |
+| Statut du lancement                              | Go, À confirmer, À déterminer, Suspendu                                                                                                              |
+| Opérateur, Fusée, Site de lancement              | Selon Launch Library 2                                                                                                                               |
+| Diffusion en direct                              | 1 pendant la diffusion officielle                                                                                                                    |
+| Lancement aujourd'hui                            | 1 quand le prochain lancement a lieu aujourd'hui (si son jour est connu)                                                                             |
+| Dernier lancement, Résultat du dernier lancement | Le dernier lancement parti, et son issue : En vol, Réussi, Échec, Échec partiel                                                                      |
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Le prochain lancement est le premier qui n'a pas encore décollé. Les dates sont souvent des dates
+« pas avant le » : un lancement prévu en « octobre 2026 » est daté du premier jour du mois.
+
+## Widget du tableau de bord
+
+**Lancements spatiaux** affiche le compte à rebours du prochain lancement, le nombre de lancements sous
+7 jours et les cinq prochains lancements avec leur date, leur opérateur et leur statut. Touchez un
+lancement pour lire sa mission. Le réglage **Appareil** le limite aux lancements d'un filtre ; vide, il
+montre tous les lancements.
+
+## Déclencheurs de scène
+
+Chaque déclencheur demande un **appareil** : « Prochain lancement » pour tous les lancements du monde,
+ou l'appareil d'un filtre. Un lancement qui correspond à plusieurs appareils se déclenche une fois par
+appareil : une scène ne s'exécute qu'une fois.
+
+- **Lancement imminent** : 5, 15 ou 30 minutes, 1, 2 ou 24 heures avant un lancement dont l'heure est
+  connue à la minute et dont le statut est Go ou À confirmer. Un lancement qui change d'heure se
+  déclenche de nouveau à sa nouvelle heure.
+- **Décollage** : quand Launch Library 2 signale la fusée en vol, en général dans les 10 minutes.
+- **Résultat du lancement** : réussite, échec ou échec partiel (filtre facultatif), avec la cause de
+  l'échec (en anglais).
+- **Lancement reporté** : un lancement prévu dans les 48 heures recule de 15 minutes ou plus
+  (« Nouvelle date »), ou est suspendu (« Suspendu »).
+
+Chaque déclencheur transmet une **phrase prête à envoyer**, le lancement, la mission, la fusée,
+l'opérateur, le site, la date et le statut, et ses propres détails (minutes avant, résultat, date
+précédente, retard).
+
+## Actions de scène
+
+- **Lire le prochain lancement** : une phrase comme « Prochain lancement : Falcon 9 Block 5 | Bandwagon
+  5 (SpaceX), depuis Cape Canaveral SFS, FL, USA, lun. 19 oct. · 12:30. Statut : Go. », ainsi que le
+  lancement, l'opérateur, le site, la date, les heures restantes (-1 s'il n'y en a pas) et le statut.
+- **Lire les prochains lancements** : une phrase qui liste les 1 à 5 prochains lancements avec leur
+  date.
+
+Les deux acceptent un appareil facultatif pour s'en tenir à un filtre.
+
+## Exemples de scènes
+
+- **Lancement imminent** (Prochain lancement · Kourou, 15 minutes avant) → envoyer la phrase du
+  déclencheur sur votre téléphone.
+- **Décollage** (Prochain lancement · SpaceX) → passer la lumière du salon en bleu, puis lire la phrase
+  sur l'enceinte.
+- Chaque matin à 8 h → **Lire les prochains lancements** (3) → envoyer la phrase par message.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **Rien dans les appareils** : Launch Library 2 n'a pas encore été lu. Appuyez sur **Vérifier** : le
+  message affiche l'erreur éventuelle.
+- **« Limite de requêtes atteinte »** : Launch Library 2 accepte 15 requêtes par heure sans compte et
+  répond 429 au-delà. L'intégration attend le délai annoncé et relit d'elle-même. Évitez d'appuyer sur
+  **Vérifier** plusieurs fois de suite : chaque appui coûte 2 requêtes.
+- **Un filtre ne trouve rien** : appuyez sur **Vérifier** pour voir combien de lancements retient chaque
+  filtre. Un filtre ne voit que les 40 prochains lancements du monde, soit un à deux mois.
+- Ajoutez `LOG_LEVEL=debug` au conteneur pour voir chaque lecture.
+
+## Limites
+
+- Launch Library 2 est gratuit et anonyme mais limité à **15 requêtes par heure** : l'intégration lit
+  les lancements à venir toutes les 30 minutes, toutes les 10 minutes à partir d'une heure avant un
+  lancement jusqu'à son résultat, et les derniers lancements toutes les 2 heures : de 2 à 7 requêtes
+  par heure. Sa propre marge est de 12 par heure.
+- Le décollage et les résultats sont vus à la lecture suivante : jusqu'à 10 minutes de retard.
+- Les données sont celles de la communauté Launch Library 2 : une date peut changer à la dernière
+  minute, un résultat être publié des heures plus tard.
+- Les liens des diffusions ne sont pas disponibles dans ce mode de l'API : seul l'indicateur « en
+  direct » l'est.
+- Cette intégration n'est affiliée ni à The Space Devs, ni à aucun opérateur de lancement.
+
+## Crédits
+
+Données des lancements : [Launch Library 2](https://thespacedevs.com/llapi) de The Space Devs.
+Intégration de guim31, sous licence Apache 2.0.

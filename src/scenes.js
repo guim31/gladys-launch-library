@@ -1,41 +1,94 @@
 // -----------------------------------------------------------------------------
-// Scene actions (SDK v0.14+, Gladys 5.1+).
-//
-// A scene action is an OPERATION a scene author places in a scene, with
-// parameters and a result: "identify this device", "take a snapshot", "clean
-// these rooms". Each one is declared in the manifest `scene_actions` field
-// (key, label, `fields` in the config_schema grammar, scalar `outputs`) and
-// handled here, keyed by that same `key`; index.js registers every entry with
-// `gladys.onSceneAction(key, ...)`.
-//
-// Scene TRIGGERS are the other direction ("this happened"): they are fired by
-// the device that observes the event, see src/devices/motionSensor.js.
-//
-// The rules that matter:
-//   - `fields` arrive RESOLVED: scene variables substituted, defaults applied,
-//     validated by the core; a `"source": "devices"` field is the chosen
-//     device external_id;
-//   - resolve an object of the declared `outputs` (scalars only), readable by
-//     the following actions of the scene, or `undefined` for none. Keys not
-//     declared in the manifest are dropped by the core;
-//   - throwing fails THIS action only: the scene logs it and continues. A
-//     scene action is never a condition: return an output and let the scene
-//     author gate on it;
-//   - never fire a scene event as a consequence of a received action: a scene
-//     bound to that event would loop through the integration.
+// Scene actions (manifest `scene_actions`): sentences ready to send in a
+// message or to say aloud ({{<column>.<row>.sentence}}), in the language of
+// the configuration (a scene action does not get the user's language), and a
+// few values for conditions. The optional "device" field picks a filter.
 // -----------------------------------------------------------------------------
 
-import { createLogger } from '@gladysassistant/integration-sdk';
-import { signalDevice } from './devices/index.js';
+import { deviceIds } from './device.js';
+import { SENTENCES, STATUS_NAMES } from './i18n.js';
+import { hoursUntil, nextLaunch, scopes, shortName, upcomingOf } from './launches.js';
+import { formatNet } from './time.js';
 
-const logger = createLogger({ name: 'scenes' });
+export const DEFAULT_COUNT = 3;
+export const MAX_COUNT = 5;
+
+/** The scope of a device external id; every launch when none or unknown. */
+export function scopeOf(service, externalId) {
+  const all = scopes(service.config);
+  return all.find((scope) => deviceIds(service.gladys, scope.key).device === externalId) ?? all[0];
+}
+
+/** The words of a launch for the sentences. */
+export function launchWords(launch, language, timeZone) {
+  return {
+    name: shortName(launch),
+    provider: launch.provider,
+    location: launch.location,
+    date: formatNet(launch, language, timeZone),
+    status: STATUS_NAMES[language][launch.status],
+  };
+}
+
+function clampCount(value) {
+  const count = Math.trunc(Number(value ?? DEFAULT_COUNT));
+  return Number.isFinite(count) && count > 0 ? Math.min(count, MAX_COUNT) : DEFAULT_COUNT;
+}
+
+/** The next launches of a scope as words. */
+export function upcomingSummary(service, scope, count, language = service.config.language) {
+  const sentences = SENTENCES[language];
+  const launches = service.launches();
+  if (!launches) {
+    return { sentence: sentences.noData, list: [] };
+  }
+  const list = upcomingOf(launches, scope, service.now()).slice(0, count);
+  return { sentence: list.length === 0 ? sentences.none : null, list };
+}
 
 export const SCENE_ACTIONS = {
-  // The ack is awaited under the action's `timeout_seconds` (15 s in the
-  // manifest), counted from the moment the scene reaches the action.
-  async identify_device(gladys, { fields, config }) {
-    logger.info(`Scene action identify_device <- ${fields.device}`);
-    const signalled = await signalDevice(gladys, fields.device, config);
-    return { signalled };
+  read_next_launch: async (service, { fields = {} }) => {
+    const language = service.config.language;
+    const scope = scopeOf(service, fields.device);
+    const summary = upcomingSummary(service, scope, 1);
+    const launches = service.launches();
+    const launch = launches && nextLaunch(launches, scope, service.now());
+    if (!launch) {
+      return {
+        sentence: summary.sentence,
+        launch_name: '',
+        provider: '',
+        location: '',
+        launch_date: '',
+        hours_until: -1,
+        status: '',
+      };
+    }
+    const words = launchWords(launch, language, service.timeZone);
+    return {
+      sentence: SENTENCES[language].next(words),
+      launch_name: words.name,
+      provider: launch.provider,
+      location: launch.location,
+      launch_date: words.date,
+      hours_until: hoursUntil(launch, service.now()),
+      status: launch.status,
+    };
+  },
+  read_upcoming_launches: async (service, { fields = {} }) => {
+    const language = service.config.language;
+    const summary = upcomingSummary(
+      service,
+      scopeOf(service, fields.device),
+      clampCount(fields.count),
+    );
+    return {
+      sentence:
+        summary.sentence ??
+        SENTENCES[language].upcoming(
+          summary.list.map((launch) => launchWords(launch, language, service.timeZone)),
+        ),
+      count: summary.list.length,
+    };
   },
 };

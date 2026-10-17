@@ -1,45 +1,55 @@
 // -----------------------------------------------------------------------------
-// Integration configuration.
-//
-// The configuration is filled in by the user in Gladys, from the `config_schema`
-// declared in `gladys-assistant-integration.json`. The SDK fetches it for you
-// (`gladys.getConfig()`) and notifies you of every change through
-// `gladys.onConfigUpdated()`.
-//
-// This module only provides defaults and normalizes the received object, so the
-// rest of the code never has to deal with `undefined`.
+// Configuration: DEFAULT_CONFIG mirrors the manifest defaults (tied by
+// test/manifest.test.js), and normalizeConfig() turns whatever Gladys sends
+// (a field never saved is absent) into a complete, valid object. Nothing here
+// throws.
 // -----------------------------------------------------------------------------
 
-// Defaults: they MUST stay consistent with the `default` values declared in the
-// `config_schema` of the manifest.
+export const LANGUAGES = ['en', 'fr', 'de', 'es'];
+
 export const DEFAULT_CONFIG = {
-  latitude: 48.8566, // Paris
-  longitude: 2.3522,
-  unit: 'celsius', // 'celsius' | 'fahrenheit'
-  // Seconds between two reads of the polled sensors. Gladys polls at most once
-  // a minute: slower intervals are applied by skipping polls (see
-  // createPoller in src/devices/index.js).
-  poll_frequency: 300,
-  // Reserved key (NOT in config_schema): because the manifest declares both
-  // 'local' and 'cloud' in its `transports` field, Gladys shows a standard
-  // "Prefer the local connection" toggle and sends the user's choice here.
-  // Read-only for the integration; defaults to true.
-  GLADYS_PREFER_LOCAL: true,
+  language: 'fr',
+  filters: '',
 };
 
+// One device per filter: a few are plenty, and each one is a device.
+export const MAX_FILTERS = 5;
+
 /**
- * Merge the user config with the defaults.
- * @param {Record<string, unknown>} raw config returned by the SDK
+ * @param {object} [raw] the configuration sent by Gladys
+ * @returns {object} DEFAULT_CONFIG's keys with valid values
  */
 export function normalizeConfig(raw = {}) {
+  const source = raw && typeof raw === 'object' ? raw : {};
   return {
-    ...DEFAULT_CONFIG,
-    ...raw,
-    // Force the types: config may arrive as strings from a form.
-    latitude: Number(raw.latitude ?? DEFAULT_CONFIG.latitude),
-    longitude: Number(raw.longitude ?? DEFAULT_CONFIG.longitude),
-    poll_frequency: Number(raw.poll_frequency ?? DEFAULT_CONFIG.poll_frequency),
-    // The preference is a boolean; anything but an explicit false means true.
-    GLADYS_PREFER_LOCAL: raw.GLADYS_PREFER_LOCAL !== false,
+    language: LANGUAGES.includes(source.language) ? source.language : DEFAULT_CONFIG.language,
+    filters: typeof source.filters === 'string' ? source.filters.trim().slice(0, 300) : '',
   };
+}
+
+/** A name compared without case, accents nor punctuation: "Rocket Lab" = "rocketlab". */
+export function foldName(name) {
+  return String(name ?? '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '');
+}
+
+/**
+ * The filters typed by the user ("SpaceX, Kourou; Ariane"), each with the
+ * slug of its device id. The slug is the folded term: retyping "spacex" or
+ * "Space X" keeps the same device.
+ * @returns {{ label: string, slug: string }[]}
+ */
+export function parseFilters(text) {
+  const filters = [];
+  for (const part of String(text ?? '').split(/[,;\n]/)) {
+    const label = part.trim().slice(0, 40);
+    const slug = foldName(label);
+    if (slug && !filters.some((filter) => filter.slug === slug)) {
+      filters.push({ label, slug });
+    }
+  }
+  return filters.slice(0, MAX_FILTERS);
 }
