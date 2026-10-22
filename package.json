@@ -1,6 +1,6 @@
 {
   "name": "gladys-launch-library",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Upcoming rocket launches for Gladys Assistant: next launch, countdown, scene triggers and a widget, from Launch Library 2.",
   "type": "module",
